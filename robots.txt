@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wattready.com/sitemap.xml
+Sitemap: https://wattready-site.pages.dev/sitemap.xml
