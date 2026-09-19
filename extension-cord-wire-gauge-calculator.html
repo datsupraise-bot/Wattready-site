@@ -191,6 +191,9 @@
   .related-item .related-name { color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 2px; }
   .related-item.current { border-style: solid; border-color: var(--accent); color: var(--text-muted); }
   .related-item.current .related-name { color: var(--accent-strong); }
+  a.related-item { display: block; text-decoration: none; transition: border-color 0.15s ease; }
+  a.related-item:hover { border-style: solid; border-color: var(--accent); }
+  a.brand-mark { text-decoration: none; }
 
   footer.site-foot { margin-top: 30px; font-size: 12px; color: var(--text-faint); text-align: center; }
 </style>
@@ -200,7 +203,7 @@
 
   <header class="top">
     <div class="brand-row">
-      <span class="brand-mark">WATTREADY</span>
+      <a class="brand-mark" href="index.html">WATTREADY</a>
       <span class="crumb">Generator tools</span>
     </div>
     <h1>What gauge extension cord do you need for your generator?</h1>
@@ -258,10 +261,10 @@
       <div class="related">
         <h3>Related tools</h3>
         <div class="related-list">
-          <div class="related-item"><span class="related-name">Generator sizing calculator</span>What size generator do you need</div>
-          <div class="related-item"><span class="related-name">Runtime &amp; fuel cost</span>How long a tank will last and what it'll cost</div>
+          <a class="related-item" href="generator-sizing-calculator.html"><span class="related-name">Generator sizing calculator</span>What size generator do you need</a>
+          <a class="related-item" href="generator-runtime-fuel-calculator.html"><span class="related-name">Runtime &amp; fuel cost</span>How long a tank will last and what it'll cost</a>
           <div class="related-item current"><span class="related-name">Extension cord wire gauge</span>You're here</div>
-          <div class="related-item"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</div>
+          <a class="related-item" href="portable-vs-standby-generator.html"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</a>
         </div>
       </div>
 
