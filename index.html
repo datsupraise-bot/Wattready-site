@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WattReady — free generator sizing, fuel cost, and safety calculators</title>
+<meta name="description" content="Free calculators for generator sizing, fuel cost and runtime, safe extension cord gauge, and portable vs. standby comparison. No sign-up, no cost.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0F2F4; --panel: #FFFFFF; --panel-2: #F7F8F9;
+    --border: #D8DCE1; --border-strong: #B9C0C8;
+    --text: #171B20; --text-muted: #5B6570; --text-faint: #8A939D;
+    --accent: #B8790A; --accent-strong: #8F5D06; --accent-bg: #FBF0DC;
+    --warn: #B0392A; --warn-bg: #FAE7E3;
+    --ok: #3E7A56; --ok-bg: #E4F0E8;
+    --focus: #1B63C4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181D; --panel: #1B2028; --panel-2: #20262E;
+      --border: #2C333C; --border-strong: #3C4652;
+      --text: #ECEEF0; --text-muted: #9AA3AE; --text-faint: #6D7581;
+      --accent: #F5A623; --accent-strong: #FFC15E; --accent-bg: #3A2C10;
+      --warn: #E8735F; --warn-bg: #3A211C;
+      --ok: #6FC493; --ok-bg: #1D3227;
+      --focus: #5B9CF0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181D; --panel: #1B2028; --panel-2: #20262E;
+    --border: #2C333C; --border-strong: #3C4652;
+    --text: #ECEEF0; --text-muted: #9AA3AE; --text-faint: #6D7581;
+    --accent: #F5A623; --accent-strong: #FFC15E; --accent-bg: #3A2C10;
+    --warn: #E8735F; --warn-bg: #3A211C;
+    --ok: #6FC493; --ok-bg: #1D3227;
+    --focus: #5B9CF0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15.5px; line-height: 1.6; }
+  h1, h2, h3, .num-display { font-family: 'Archivo', system-ui, sans-serif; }
+  a { color: var(--accent-strong); }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  nav.top-nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+  }
+  nav.top-nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand-mark {
+    font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 15px;
+    letter-spacing: 0.02em; color: var(--accent); border: 1px solid var(--accent);
+    padding: 2px 7px; border-radius: 3px; text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 18px; font-size: 13.5px; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; }
+  .nav-links a:hover { color: var(--text); }
+  @media (max-width: 560px) { .nav-links { display: none; } }
+
+  section.hero {
+    padding: 52px 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  section.hero h1 {
+    font-size: 34px; font-weight: 700; letter-spacing: -0.015em;
+    margin: 0 0 14px; max-width: 18ch; line-height: 1.15;
+  }
+  section.hero p.sub {
+    font-size: 17px; color: var(--text-muted); max-width: 56ch; margin: 0;
+  }
+
+  section.tools { padding: 40px 0 10px; }
+  section.tools h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0 0 18px; }
+  .tool-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+  }
+  @media (max-width: 640px) { .tool-grid { grid-template-columns: 1fr; } }
+  .tool-card {
+    display: block; text-decoration: none; color: var(--text);
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 18px 20px; transition: border-color 0.15s ease;
+  }
+  .tool-card:hover { border-color: var(--accent); }
+  .tool-card .tool-kicker {
+    font-size: 11px; font-weight: 600; color: var(--accent-strong);
+    letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .tool-card h3 { font-size: 17px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.005em; }
+  .tool-card p { font-size: 13.5px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+  section.guide { padding: 48px 0 10px; }
+  section.guide h2 {
+    font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  section.guide .guide-intro { color: var(--text-muted); margin: 0 0 28px; max-width: 62ch; }
+
+  .guide-block { margin-bottom: 30px; }
+  .guide-block h3 { font-size: 16.5px; font-weight: 700; margin: 0 0 10px; }
+  .guide-block p { margin: 0 0 12px; color: var(--text); max-width: 68ch; }
+  .guide-block p:last-child { margin-bottom: 0; }
+  .guide-block ul { margin: 0 0 12px; padding-left: 20px; color: var(--text); max-width: 68ch; }
+  .guide-block li { margin-bottom: 6px; }
+
+  .safety-callout {
+    background: var(--warn-bg); border: 1px solid var(--warn); border-radius: 6px;
+    padding: 16px 18px; margin: 0 0 30px;
+  }
+  .safety-callout .safety-label {
+    font-size: 12px; font-weight: 700; color: var(--warn); letter-spacing: 0.02em;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .safety-callout p { margin: 0 0 8px; color: var(--text); max-width: 68ch; }
+  .safety-callout p:last-child { margin-bottom: 0; }
+  .safety-callout ul { margin: 8px 0 0; padding-left: 20px; }
+  .safety-callout li { margin-bottom: 6px; color: var(--text); }
+
+  section.faq { padding: 20px 0 10px; }
+  section.faq h2 { font-size: 22px; font-weight: 700; margin: 0 0 20px; }
+  .faq-item { border-bottom: 1px solid var(--border); padding: 18px 0; }
+  .faq-item:first-of-type { border-top: 1px solid var(--border); }
+  .faq-item h3 { font-size: 15.5px; font-weight: 600; margin: 0 0 8px; }
+  .faq-item p { font-size: 14px; color: var(--text-muted); margin: 0; max-width: 66ch; }
+
+  footer.site-foot {
+    margin-top: 50px; padding: 26px 0 40px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--text-faint); text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="wrap">
+    <a href="index.html" class="brand-mark">WATTREADY</a>
+    <div class="nav-links">
+      <a href="generator-sizing-calculator.html">Sizing</a>
+      <a href="generator-runtime-fuel-calculator.html">Runtime &amp; fuel</a>
+      <a href="extension-cord-wire-gauge-calculator.html">Wire gauge</a>
+      <a href="portable-vs-standby-generator.html">Portable vs. standby</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <section class="hero">
+    <h1>Free generator calculators, built for actual outages</h1>
+    <p class="sub">Figure out what size generator you need, what it'll cost to run, how to wire it safely, and whether portable or standby fits your home — no account, no download, no fine print.</p>
+  </section>
+
+  <section class="tools">
+    <h2>The tools</h2>
+    <div class="tool-grid">
+      <a class="tool-card" href="generator-sizing-calculator.html">
+        <div class="tool-kicker">Sizing</div>
+        <h3>What size generator do I need?</h3>
+        <p>Check off what you want to keep running and get a recommended wattage, factoring in startup surge — the thing most sizing advice gets wrong.</p>
+      </a>
+      <a class="tool-card" href="generator-runtime-fuel-calculator.html">
+        <div class="tool-kicker">Runtime &amp; cost</div>
+        <h3>How long will a tank last, and what will it cost?</h3>
+        <p>Enter your generator's size, fuel type, and tank capacity to see runtime and cost per hour at any load level.</p>
+      </a>
+      <a class="tool-card" href="extension-cord-wire-gauge-calculator.html">
+        <div class="tool-kicker">Safety</div>
+        <h3>What gauge extension cord do I need?</h3>
+        <p>Checks your cord against both the safe current limit and voltage drop for your exact load and length.</p>
+      </a>
+      <a class="tool-card" href="portable-vs-standby-generator.html">
+        <div class="tool-kicker">Buying decision</div>
+        <h3>Portable or standby — which fits me?</h3>
+        <p>A transparent, reasoned lean based on your budget, ownership status, and how often you actually lose power.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="guide">
+    <h2>Getting generator sizing right</h2>
+    <p class="guide-intro">The short version: most people undersize their generator because they only account for what an appliance draws while running, and ignore what it takes to start it.</p>
+
+    <div class="guide-block">
+      <h3>Running watts vs. starting watts</h3>
+      <p>Every motor-driven appliance — a refrigerator, a sump pump, a well pump, central air — draws several times more power for a fraction of a second when it switches on than it does while it's running. A refrigerator that runs on 700 watts can briefly pull over 2,000 watts at startup. A generator has to be able to cover that spike, even if only one appliance is starting at a time.</p>
+      <p>This is why two houses with the same everyday power needs can need very differently sized generators: the one with a well pump and central AC has a much bigger startup spike to cover than the one without.</p>
+    </div>
+
+    <div class="guide-block">
+      <h3>Why a safety margin matters</h3>
+      <p>Generator output is rated under ideal conditions. Real-world factors — altitude, heat, a generator that's a few years old — all reduce actual output below the nameplate number. Sizing to exactly your calculated load leaves no room for that, or for adding one more appliance later. A 20% margin above your calculated requirement is standard practice and keeps you from running a generator at its absolute limit for hours at a time, which shortens its life.</p>
+    </div>
+
+    <div class="guide-block">
+      <h3>Essentials-only vs. whole-house</h3>
+      <p>Most households don't actually need to power everything during an outage — they need to power the handful of things that matter: refrigeration, some lighting, a sump or well pump if they have one, and a way to heat the house if it's a gas furnace (which still needs electricity to run its blower and ignition, even though it's not an "electric" appliance in the usual sense). Building your list around what actually matters, rather than the whole panel, is usually what keeps a portable generator a realistic option instead of forcing a standby install.</p>
+    </div>
+  </section>
+
+  <div class="safety-callout">
+    <div class="safety-label">Before you run a generator</div>
+    <p>Portable generators produce carbon monoxide, a gas you can't see or smell, and it builds up fast in enclosed or partly enclosed spaces. This is the single most important safety rule for generator use:</p>
+    <ul>
+      <li>Run it outdoors only, at least 20 feet from the house, with the exhaust pointed away from windows, doors, and vents — never in a garage, basement, carport, or on a porch, even with the door open.</li>
+      <li>Install carbon monoxide detectors inside the home if you don't already have them, and never rely on smell or symptoms to warn you in time.</li>
+      <li>Let the generator cool down before refueling — spilled fuel on a hot engine is a fire risk.</li>
+      <li>Plug appliances directly into the generator or use a properly rated, undamaged extension cord — never connect a generator to your home's wiring without a transfer switch installed by a licensed electrician; doing so can send power back down the line and injure utility workers.</li>
+    </ul>
+  </div>
+
+  <section class="faq">
+    <h2>Common questions</h2>
+
+    <div class="faq-item">
+      <h3>What size generator do I need for a 2,000 sq ft house?</h3>
+      <p>Square footage alone doesn't determine generator size — what matters is which specific appliances you want to run and their combined running and starting watts. A 2,000 sq ft house with a gas furnace and no well pump might need under 5,000 watts for essentials; the same size house with a well pump and central AC could need 10,000 watts or more. Use the sizing calculator above with your actual appliance list for an accurate number.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Can I run my refrigerator and freezer on the same generator as other appliances?</h3>
+      <p>Yes, as long as the generator's total capacity covers the combined running watts of everything you're powering plus the single largest startup surge among them — not the sum of every appliance's startup surge, since they don't all start at the exact same instant in normal use.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>How many watts does a house need during a power outage?</h3>
+      <p>For essentials only — refrigerator, some lighting, phone charging, and a sump or well pump if applicable — most households land somewhere between 3,000 and 6,500 watts. Whole-house coverage including central air conditioning typically pushes that to 10,000&ndash;20,000+ watts, which is standby generator territory rather than portable.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Is a 20% safety margin always necessary?</h3>
+      <p>It's a conservative standard, not a hard rule. If your calculated load already sits well below your generator's capacity, or you know you're not adding anything to the list later, you can size closer to the raw number. The margin exists to cover real-world output loss and future flexibility, not because the raw calculation is wrong.</p>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    WattReady's calculators use typical published wattage and consumption figures, not model-specific data. They're estimates to help you plan, not a substitute for your equipment's actual nameplate ratings or a licensed electrician's assessment.
+  </footer>
+
+</div>
+</body>
+</html>

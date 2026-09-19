@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator size calculator — what size generator do you need?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0F2F4;
+    --panel: #FFFFFF;
+    --panel-2: #F7F8F9;
+    --border: #D8DCE1;
+    --border-strong: #B9C0C8;
+    --text: #171B20;
+    --text-muted: #5B6570;
+    --text-faint: #8A939D;
+    --accent: #B8790A;
+    --accent-strong: #8F5D06;
+    --accent-bg: #FBF0DC;
+    --warn: #B0392A;
+    --warn-bg: #FAE7E3;
+    --ok: #3E7A56;
+    --ok-bg: #E4F0E8;
+    --focus: #1B63C4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181D;
+      --panel: #1B2028;
+      --panel-2: #20262E;
+      --border: #2C333C;
+      --border-strong: #3C4652;
+      --text: #ECEEF0;
+      --text-muted: #9AA3AE;
+      --text-faint: #6D7581;
+      --accent: #F5A623;
+      --accent-strong: #FFC15E;
+      --accent-bg: #3A2C10;
+      --warn: #E8735F;
+      --warn-bg: #3A211C;
+      --ok: #6FC493;
+      --ok-bg: #1D3227;
+      --focus: #5B9CF0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181D;
+    --panel: #1B2028;
+    --panel-2: #20262E;
+    --border: #2C333C;
+    --border-strong: #3C4652;
+    --text: #ECEEF0;
+    --text-muted: #9AA3AE;
+    --text-faint: #6D7581;
+    --accent: #F5A623;
+    --accent-strong: #FFC15E;
+    --accent-bg: #3A2C10;
+    --warn: #E8735F;
+    --warn-bg: #3A211C;
+    --ok: #6FC493;
+    --ok-bg: #1D3227;
+    --focus: #5B9CF0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  h1, h2, h3, .num-display {
+    font-family: 'Archivo', system-ui, sans-serif;
+  }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.top {
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 26px;
+  }
+  .brand-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .brand-mark {
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 12px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header.top p {
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 62ch;
+    font-size: 15px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .category {
+    margin-bottom: 28px;
+  }
+  .category h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+    color: var(--text-muted);
+    margin: 0 0 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .appliance-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .appliance-row:last-child { border-bottom: none; }
+
+  .appliance-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .appliance-name-wrap { min-width: 0; }
+  .appliance-name {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 14.5px;
+  }
+  .appliance-spec {
+    font-size: 12.5px;
+    color: var(--text-faint);
+    margin-top: 1px;
+  }
+  .appliance-spec .surge-flag {
+    color: var(--warn);
+  }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .qty-control button {
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .qty-control button:hover { background: var(--border); }
+  .qty-control input {
+    width: 34px;
+    height: 26px;
+    border: none;
+    border-left: 1px solid var(--border-strong);
+    border-right: 1px solid var(--border-strong);
+    text-align: center;
+    font-size: 13.5px;
+    background: var(--panel);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -moz-appearance: textfield;
+  }
+  .qty-control input::-webkit-outer-spin-button,
+  .qty-control input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .row-watts {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    min-width: 64px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .custom-add {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 90px 90px auto;
+    gap: 8px;
+  }
+  .custom-add input {
+    height: 34px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--text);
+    padding: 0 10px;
+    font-size: 13.5px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .custom-add input:focus, .qty-control input:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .custom-add button {
+    height: 34px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent-strong);
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0 14px;
+    white-space: nowrap;
+  }
+  .custom-add button:hover { background: var(--accent-bg); }
+  @media (max-width: 520px) {
+    .custom-add { grid-template-columns: 1fr 1fr; }
+  }
+
+  .custom-list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .custom-list-row button {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 12.5px;
+    text-decoration: underline;
+  }
+
+  /* Summary panel */
+  .summary {
+    position: sticky;
+    top: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 20px 18px;
+  }
+  .summary h2 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    font-size: 13.5px;
+  }
+  .summary-line .lbl { color: var(--text-muted); }
+  .summary-line .val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .summary-divider {
+    border-top: 1px solid var(--border);
+    margin: 10px 0 12px;
+  }
+
+  .result-block {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 14px 16px;
+    margin: 4px 0 16px;
+  }
+  .result-block .result-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent-strong);
+    letter-spacing: 0.01em;
+  }
+  .result-block .num-display {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 4px 0 2px;
+    letter-spacing: -0.01em;
+  }
+  .result-block .result-unit {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .result-block .result-category {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--accent);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .margin-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .margin-toggle label {
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .track {
+    position: absolute;
+    inset: 0;
+    background: var(--border-strong);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .switch .track::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: var(--panel);
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+  }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::before { transform: translateX(16px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .gauge {
+    margin: 14px 0 16px;
+  }
+  .gauge-track {
+    height: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .gauge-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.2s ease;
+  }
+  .gauge-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
+  .reset-btn {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 4px;
+    font-size: 12.5px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .reset-btn:hover { background: var(--panel-2); color: var(--text); }
+
+  .disclaimer {
+    margin-top: 28px;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--warn);
+    border-radius: 0 4px 4px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .disclaimer strong { color: var(--text); }
+
+  .related {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .related h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+  }
+  .related-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+  }
+  .related-item {
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+  .related-item .related-name {
+    color: var(--text-muted);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  footer.site-foot {
+    margin-top: 30px;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-row">
+      <span class="brand-mark">WATTREADY</span>
+    </div>
+    <h1>What size generator do you need?</h1>
+    <p>Check off what you want to keep running during an outage. The total, the largest startup surge, and a recommended generator size update as you go — no account, no download.</p>
+  </header>
+
+  <div class="layout">
+    <div class="left-col">
+
+      <div id="categories"></div>
+
+      <div class="category">
+        <h2>Add something not on the list</h2>
+        <div class="custom-add">
+          <input type="text" id="custom-name" placeholder="Appliance name">
+          <input type="number" id="custom-running" placeholder="Running W" min="0">
+          <input type="number" id="custom-starting" placeholder="Starting W" min="0">
+          <button id="custom-add-btn" type="button">Add</button>
+        </div>
+        <div id="custom-list"></div>
+      </div>
+
+      <div class="disclaimer">
+        <strong>These are typical estimates, not your appliances' exact numbers.</strong> Motor-driven appliances (pumps, compressors, fans) draw far more power for a fraction of a second when they start than while running — that startup surge, not the running load, is usually what determines the generator size you actually need. Check the nameplate or owner's manual on your own equipment where it matters, and for a permanent whole-house installation, have a licensed electrician confirm the sizing before you buy.
+      </div>
+
+      <div class="related">
+        <h3>Related tools</h3>
+        <div class="related-list">
+          <div class="related-item"><span class="related-name">Runtime &amp; fuel cost calculator</span>How long a tank will last and what it'll cost</div>
+          <div class="related-item"><span class="related-name">Extension cord wire gauge</span>Safe gauge for your generator's load and cord length</div>
+          <div class="related-item"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</div>
+          <div class="related-item"><span class="related-name">Transfer switch sizing</span>What switch amperage matches your panel</div>
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="summary">
+      <h2>Your estimate</h2>
+
+      <div class="summary-line"><span class="lbl">Running load</span><span class="val" id="sum-running">0 W</span></div>
+      <div class="summary-line"><span class="lbl">Largest startup surge</span><span class="val" id="sum-surge">0 W</span></div>
+      <div class="summary-divider"></div>
+      <div class="summary-line"><span class="lbl">Required capacity</span><span class="val" id="sum-required">0 W</span></div>
+
+      <div class="margin-toggle">
+        <label for="margin-check">Add 20% safety margin</label>
+        <span class="switch">
+          <input type="checkbox" id="margin-check" checked>
+          <span class="track" onclick="document.getElementById('margin-check').click()"></span>
+        </span>
+      </div>
+
+      <div class="result-block">
+        <div class="result-label">RECOMMENDED MINIMUM</div>
+        <div class="num-display" id="result-watts">0</div>
+        <div class="result-unit">watts</div>
+        <div class="result-category" id="result-category">Check a few appliances to see your recommendation.</div>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge-track"><div class="gauge-fill" id="gauge-fill" style="width:0%"></div></div>
+        <div class="gauge-scale"><span>0</span><span>7.5k</span><span>15k</span><span>22.5k+</span></div>
+      </div>
+
+      <button class="reset-btn" id="reset-btn" type="button">Reset selections</button>
+    </aside>
+  </div>
+
+  <footer class="site-foot">Estimates only. Not a substitute for a licensed electrician's load calculation.</footer>
+</div>
+
+<script>
+(function() {
+  var DATA = [
+    { id: 'essentials', label: 'Essentials', items: [
+      { key: 'fridge', name: 'Refrigerator', running: 700, starting: 2200, defaultQty: 1, defaultOn: true },
+      { key: 'freezer', name: 'Freezer (chest or upright)', running: 200, starting: 700, defaultQty: 0, defaultOn: false },
+      { key: 'sump', name: 'Sump pump (1/3 hp)', running: 800, starting: 1300, defaultQty: 1, defaultOn: true },
+      { key: 'well', name: 'Well pump (1/2 hp)', running: 1000, starting: 2100, defaultQty: 0, defaultOn: false },
+      { key: 'blower', name: 'Furnace blower fan (gas furnace)', running: 600, starting: 1200, defaultQty: 1, defaultOn: true },
+      { key: 'garage', name: 'Garage door opener (1/2 hp)', running: 875, starting: 2350, defaultQty: 0, defaultOn: false },
+      { key: 'lights', name: 'LED lighting (per 10 fixtures)', running: 100, starting: 100, defaultQty: 1, defaultOn: true },
+      { key: 'router', name: 'Wifi router and modem', running: 20, starting: 20, defaultQty: 1, defaultOn: true },
+      { key: 'chargers', name: 'Phone and laptop charging', running: 100, starting: 100, defaultQty: 1, defaultOn: true }
+    ]},
+    { id: 'kitchen', label: 'Kitchen', items: [
+      { key: 'microwave', name: 'Microwave', running: 1000, starting: 1000, defaultQty: 0, defaultOn: false },
+      { key: 'coffee', name: 'Coffee maker', running: 1500, starting: 1500, defaultQty: 0, defaultOn: false },
+      { key: 'toaster', name: 'Toaster', running: 1200, starting: 1200, defaultQty: 0, defaultOn: false },
+      { key: 'rangeburner', name: 'Electric range burner (one)', running: 2000, starting: 2000, defaultQty: 0, defaultOn: false },
+      { key: 'dishwasher', name: 'Dishwasher', running: 1200, starting: 1800, defaultQty: 0, defaultOn: false }
+    ]},
+    { id: 'comfort', label: 'Comfort and climate', items: [
+      { key: 'windowac', name: 'Window AC unit (10,000 BTU)', running: 1200, starting: 3000, defaultQty: 0, defaultOn: false },
+      { key: 'centralac', name: 'Central AC (3 ton / 36,000 BTU)', running: 4500, starting: 9000, defaultQty: 0, defaultOn: false },
+      { key: 'spaceheater', name: 'Portable space heater', running: 1500, starting: 1500, defaultQty: 0, defaultOn: false },
+      { key: 'waterheater', name: 'Electric water heater', running: 4000, starting: 4000, defaultQty: 0, defaultOn: false }
+    ]},
+    { id: 'laundry', label: 'Laundry', items: [
+      { key: 'washer', name: 'Washing machine', running: 1200, starting: 2300, defaultQty: 0, defaultOn: false },
+      { key: 'electricdryer', name: 'Electric clothes dryer', running: 5000, starting: 5000, defaultQty: 0, defaultOn: false },
+      { key: 'gasdryer', name: 'Gas clothes dryer (motor and ignition)', running: 700, starting: 1400, defaultQty: 0, defaultOn: false }
+    ]},
+    { id: 'other', label: 'Electronics and other', items: [
+      { key: 'tv', name: 'TV (LED, 55 inch)', running: 150, starting: 150, defaultQty: 0, defaultOn: false },
+      { key: 'desktop', name: 'Desktop computer', running: 200, starting: 200, defaultQty: 0, defaultOn: false },
+      { key: 'boxfan', name: 'Box fan', running: 100, starting: 200, defaultQty: 0, defaultOn: false }
+    ]}
+  ];
+
+  var customItems = [];
+  var customCounter = 0;
+  var state = {};
+
+  DATA.forEach(function(cat) {
+    cat.items.forEach(function(item) {
+      state[item.key] = { on: item.defaultOn, qty: item.defaultQty || 1 };
+    });
+  });
+
+  var catsEl = document.getElementById('categories');
+
+  function buildRow(item) {
+    var row = document.createElement('div');
+    row.className = 'appliance-row';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = state[item.key].on;
+    cb.setAttribute('aria-label', 'Include ' + item.name);
+    cb.addEventListener('change', function() {
+      state[item.key].on = cb.checked;
+      compute();
+    });
+
+    var nameWrap = document.createElement('div');
+    nameWrap.className = 'appliance-name-wrap';
+    var nameEl = document.createElement('div');
+    nameEl.className = 'appliance-name';
+    nameEl.textContent = item.name;
+    var specEl = document.createElement('div');
+    specEl.className = 'appliance-spec';
+    var surgeExtra = item.starting - item.running;
+    specEl.innerHTML = item.running.toLocaleString() + ' W running' + (surgeExtra > 0 ? ' <span class="surge-flag">&middot; ' + item.starting.toLocaleString() + ' W to start</span>' : '');
+    nameWrap.appendChild(nameEl);
+    nameWrap.appendChild(specEl);
+
+    var qtyWrap = document.createElement('div');
+    qtyWrap.className = 'qty-control';
+    var minus = document.createElement('button');
+    minus.type = 'button';
+    minus.textContent = '\u2212';
+    minus.setAttribute('aria-label', 'Decrease quantity of ' + item.name);
+    var qtyInput = document.createElement('input');
+    qtyInput.type = 'number';
+    qtyInput.min = '0';
+    qtyInput.value = state[item.key].qty;
+    qtyInput.setAttribute('aria-label', 'Quantity of ' + item.name);
+    var plus = document.createElement('button');
+    plus.type = 'button';
+    plus.textContent = '+';
+    plus.setAttribute('aria-label', 'Increase quantity of ' + item.name);
+
+    function setQty(n) {
+      n = Math.max(0, Math.min(99, Math.round(n) || 0));
+      state[item.key].qty = n;
+      qtyInput.value = n;
+      if (n === 0) { state[item.key].on = false; cb.checked = false; }
+      compute();
+    }
+    minus.addEventListener('click', function() { setQty(state[item.key].qty - 1); });
+    plus.addEventListener('click', function() {
+      if (state[item.key].qty === 0) { state[item.key].on = true; cb.checked = true; }
+      setQty(state[item.key].qty + 1);
+    });
+    qtyInput.addEventListener('change', function() { setQty(parseInt(qtyInput.value, 10)); });
+
+    qtyWrap.appendChild(minus);
+    qtyWrap.appendChild(qtyInput);
+    qtyWrap.appendChild(plus);
+
+    var wattsEl = document.createElement('div');
+    wattsEl.className = 'row-watts';
+    wattsEl.id = 'watts-' + item.key;
+
+    row.appendChild(cb);
+    row.appendChild(nameWrap);
+    row.appendChild(qtyWrap);
+    row.appendChild(wattsEl);
+    return row;
+  }
+
+  DATA.forEach(function(cat) {
+    var catEl = document.createElement('div');
+    catEl.className = 'category';
+    var h = document.createElement('h2');
+    h.textContent = cat.label;
+    catEl.appendChild(h);
+    cat.items.forEach(function(item) {
+      catEl.appendChild(buildRow(item));
+    });
+    catsEl.appendChild(catEl);
+  });
+
+  var customListEl = document.getElementById('custom-list');
+  function renderCustomList() {
+    customListEl.innerHTML = '';
+    customItems.forEach(function(ci) {
+      var row = document.createElement('div');
+      row.className = 'custom-list-row';
+      var left = document.createElement('span');
+      left.textContent = ci.name + ' — ' + ci.running.toLocaleString() + ' W running, ' + ci.starting.toLocaleString() + ' W starting';
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.textContent = 'Remove';
+      rm.addEventListener('click', function() {
+        customItems = customItems.filter(function(x) { return x.key !== ci.key; });
+        renderCustomList();
+        compute();
+      });
+      row.appendChild(left);
+      row.appendChild(rm);
+      customListEl.appendChild(row);
+    });
+  }
+
+  var errorShown = false;
+  document.getElementById('custom-add-btn').addEventListener('click', function() {
+    var nameInput = document.getElementById('custom-name');
+    var runInput = document.getElementById('custom-running');
+    var startInput = document.getElementById('custom-starting');
+    var name = nameInput.value.trim();
+    var running = parseFloat(runInput.value);
+    var starting = parseFloat(startInput.value);
+
+    clearCustomError();
+    if (!name) { showCustomError(nameInput, 'Enter a name first'); return; }
+    if (isNaN(running) || running < 0) { showCustomError(runInput, 'Enter running watts'); return; }
+    if (isNaN(starting) || starting < 0) starting = running;
+    if (starting < running) starting = running;
+
+    customCounter += 1;
+    customItems.push({ key: 'custom-' + customCounter, name: name, running: running, starting: starting });
+    renderCustomList();
+    nameInput.value = '';
+    runInput.value = '';
+    startInput.value = '';
+    compute();
+  });
+
+  function showCustomError(inputEl, msg) {
+    clearCustomError();
+    var err = document.createElement('div');
+    err.id = 'custom-error';
+    err.style.color = 'var(--warn)';
+    err.style.fontSize = '12.5px';
+    err.style.marginTop = '6px';
+    err.textContent = msg;
+    inputEl.parentElement.appendChild(err);
+    inputEl.focus();
+  }
+  function clearCustomError() {
+    var e = document.getElementById('custom-error');
+    if (e) e.remove();
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString() + ' W'; }
+
+  function categoryFor(watts) {
+    if (watts <= 0) return 'Check a few appliances to see your recommendation.';
+    if (watts <= 2000) return 'Small inverter generator (2,000 W class) — good for essentials-only or light recreational use.';
+    if (watts <= 5000) return 'Mid-size portable generator (3,500–5,000 W class) — covers most essentials plus a few extras.';
+    if (watts <= 7500) return 'Large portable generator (5,000–7,500 W class) — most common range for whole-home storm backup without central AC.';
+    if (watts <= 12000) return 'Most-circuits standby generator (7,500–12,000 W class) — handles most of the house, short of a large central AC.';
+    if (watts <= 22000) return 'Whole-house standby generator (12,000–22,000 W class) — sized to start and run central AC alongside everything else.';
+    return 'Above typical single-unit range — get a full load calculation from a licensed electrician or generator dealer.';
+  }
+
+  function compute() {
+    var totalRunning = 0;
+    var maxSurgeExtra = 0;
+
+    DATA.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        var s = state[item.key];
+        var wattsEl = document.getElementById('watts-' + item.key);
+        if (s.on && s.qty > 0) {
+          var lineWatts = item.running * s.qty;
+          totalRunning += lineWatts;
+          var extra = item.starting - item.running;
+          if (extra > maxSurgeExtra) maxSurgeExtra = extra;
+          if (wattsEl) wattsEl.textContent = fmt(lineWatts);
+        } else {
+          if (wattsEl) wattsEl.textContent = '';
+        }
+      });
+    });
+
+    customItems.forEach(function(ci) {
+      totalRunning += ci.running;
+      var extra = ci.starting - ci.running;
+      if (extra > maxSurgeExtra) maxSurgeExtra = extra;
+    });
+
+    var required = totalRunning + maxSurgeExtra;
+    var marginOn = document.getElementById('margin-check').checked;
+    var withMargin = marginOn ? required * 1.2 : required;
+
+    document.getElementById('sum-running').textContent = fmt(totalRunning);
+    document.getElementById('sum-surge').textContent = maxSurgeExtra > 0 ? '+' + fmt(maxSurgeExtra) : '0 W';
+    document.getElementById('sum-required').textContent = fmt(required);
+    document.getElementById('result-watts').textContent = Math.round(withMargin).toLocaleString();
+    document.getElementById('result-category').textContent = categoryFor(withMargin);
+
+    var pct = Math.min(100, (withMargin / 22500) * 100);
+    document.getElementById('gauge-fill').style.width = pct + '%';
+  }
+
+  document.getElementById('margin-check').addEventListener('change', compute);
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    DATA.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        state[item.key] = { on: !!item.defaultOn, qty: item.defaultQty || 1 };
+      });
+    });
+    customItems = [];
+    renderCustomList();
+    catsEl.innerHTML = '';
+    DATA.forEach(function(cat) {
+      var catEl = document.createElement('div');
+      catEl.className = 'category';
+      var h = document.createElement('h2');
+      h.textContent = cat.label;
+      catEl.appendChild(h);
+      cat.items.forEach(function(item) {
+        catEl.appendChild(buildRow(item));
+      });
+      catsEl.appendChild(catEl);
+    });
+    compute();
+  });
+
+  compute();
+})();
+</script>
+</body>
+</html>
