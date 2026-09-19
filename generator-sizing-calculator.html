@@ -454,6 +454,16 @@
     font-size: 12.5px;
     color: var(--text-faint);
   }
+  a.related-item {
+    display: block;
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+  }
+  a.related-item:hover {
+    border-style: solid;
+    border-color: var(--accent);
+  }
+  a.brand-mark { text-decoration: none; }
   .related-item .related-name {
     color: var(--text-muted);
     font-weight: 500;
@@ -474,7 +484,7 @@
 
   <header class="top">
     <div class="brand-row">
-      <span class="brand-mark">WATTREADY</span>
+      <a class="brand-mark" href="index.html">WATTREADY</a>
     </div>
     <h1>What size generator do you need?</h1>
     <p>Check off what you want to keep running during an outage. The total, the largest startup surge, and a recommended generator size update as you go — no account, no download.</p>
@@ -503,10 +513,10 @@
       <div class="related">
         <h3>Related tools</h3>
         <div class="related-list">
-          <div class="related-item"><span class="related-name">Runtime &amp; fuel cost calculator</span>How long a tank will last and what it'll cost</div>
-          <div class="related-item"><span class="related-name">Extension cord wire gauge</span>Safe gauge for your generator's load and cord length</div>
-          <div class="related-item"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</div>
-          <div class="related-item"><span class="related-name">Transfer switch sizing</span>What switch amperage matches your panel</div>
+          <a class="related-item" href="generator-runtime-fuel-calculator.html"><span class="related-name">Runtime &amp; fuel cost calculator</span>How long a tank will last and what it'll cost</a>
+          <a class="related-item" href="extension-cord-wire-gauge-calculator.html"><span class="related-name">Extension cord wire gauge</span>Safe gauge for your generator's load and cord length</a>
+          <a class="related-item" href="portable-vs-standby-generator.html"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</a>
+          <div class="related-item"><span class="related-name">Transfer switch sizing</span>Coming soon</div>
         </div>
       </div>
 
