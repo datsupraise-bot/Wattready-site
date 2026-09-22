@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transfer switch sizing calculator</title>
+<meta name="description" content="Figure out what amperage transfer switch you need for a portable or standby generator. Free, no sign-up.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F0F2F4; --panel: #FFFFFF; --panel-2: #F7F8F9;
+    --border: #D8DCE1; --border-strong: #B9C0C8;
+    --text: #171B20; --text-muted: #5B6570; --text-faint: #8A939D;
+    --accent: #B8790A; --accent-strong: #8F5D06; --accent-bg: #FBF0DC;
+    --warn: #B0392A; --warn-bg: #FAE7E3;
+    --ok: #3E7A56; --ok-bg: #E4F0E8;
+    --focus: #1B63C4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181D; --panel: #1B2028; --panel-2: #20262E;
+      --border: #2C333C; --border-strong: #3C4652;
+      --text: #ECEEF0; --text-muted: #9AA3AE; --text-faint: #6D7581;
+      --accent: #F5A623; --accent-strong: #FFC15E; --accent-bg: #3A2C10;
+      --warn: #E8735F; --warn-bg: #3A211C;
+      --ok: #6FC493; --ok-bg: #1D3227;
+      --focus: #5B9CF0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181D; --panel: #1B2028; --panel-2: #20262E;
+    --border: #2C333C; --border-strong: #3C4652;
+    --text: #ECEEF0; --text-muted: #9AA3AE; --text-faint: #6D7581;
+    --accent: #F5A623; --accent-strong: #FFC15E; --accent-bg: #3A2C10;
+    --warn: #E8735F; --warn-bg: #3A211C;
+    --ok: #6FC493; --ok-bg: #1D3227;
+    --focus: #5B9CF0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.55; }
+  h1, h2, h3, .num-display { font-family: 'Archivo', system-ui, sans-serif; }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.top { padding-bottom: 22px; border-bottom: 1px solid var(--border); margin-bottom: 26px; }
+  .brand-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .brand-mark {
+    font-family: 'Archivo', system-ui, sans-serif; font-weight: 800; font-size: 15px;
+    letter-spacing: 0.02em; color: var(--accent); border: 1px solid var(--accent);
+    padding: 2px 7px; border-radius: 3px;
+  }
+  a.brand-mark { text-decoration: none; }
+  .crumb { font-size: 12.5px; color: var(--text-faint); }
+  h1 { font-size: 26px; font-weight: 700; margin: 12px 0 8px; letter-spacing: -0.01em; }
+  header.top p { color: var(--text-muted); margin: 0; max-width: 62ch; font-size: 15px; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+  .panel h2 { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  .mode-tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+  .mode-tabs label {
+    flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 2px;
+    border: 1px solid var(--border-strong); border-radius: 5px; padding: 10px 14px;
+    cursor: pointer; color: var(--text-muted);
+  }
+  .mode-tabs label:has(input:checked) { border-color: var(--accent); background: var(--accent-bg); color: var(--text); }
+  .mode-tabs input { accent-color: var(--accent); margin-right: 6px; }
+  .mode-tabs .mode-title { font-weight: 600; font-size: 13.5px; }
+  .mode-tabs .mode-sub { font-size: 12px; color: var(--text-faint); }
+
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .field .hint { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+  .field input[type="number"] {
+    width: 100%; max-width: 220px; height: 36px; border: 1px solid var(--border-strong);
+    border-radius: 4px; background: var(--panel); color: var(--text); padding: 0 10px;
+    font-size: 14px; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .field input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .error-msg { color: var(--warn); font-size: 12.5px; margin-top: 6px; display: none; }
+  .error-msg.show { display: block; }
+
+  .toggle-choices { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-choices label {
+    display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong);
+    border-radius: 4px; padding: 8px 14px; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; color: var(--text-muted); margin: 0;
+  }
+  .toggle-choices input { accent-color: var(--accent); }
+  .toggle-choices label:has(input:checked) { color: var(--text); border-color: var(--accent); background: var(--accent-bg); }
+
+  select {
+    width: 100%; max-width: 240px; height: 36px; border: 1px solid var(--border-strong);
+    border-radius: 4px; background: var(--panel); color: var(--text); padding: 0 10px;
+    font-size: 14px; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  select:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  table.ref-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 4px; }
+  table.ref-table th, table.ref-table td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  table.ref-table th { color: var(--text-muted); font-weight: 600; font-size: 12px; }
+  table.ref-table tr.highlight-row td { background: var(--accent-bg); color: var(--text); font-weight: 600; }
+
+  .summary { position: sticky; top: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px 20px 18px; }
+  .summary h2 { font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .summary-line { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 13.5px; }
+  .summary-line .lbl { color: var(--text-muted); }
+  .summary-line .val { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .summary-divider { border-top: 1px solid var(--border); margin: 10px 0 12px; }
+
+  .result-block { background: var(--accent-bg); border: 1px solid var(--accent); border-radius: 5px; padding: 14px 16px; margin: 4px 0 16px; }
+  .result-block .result-label { font-size: 11.5px; font-weight: 600; color: var(--accent-strong); letter-spacing: 0.01em; }
+  .result-block .num-display { font-size: 32px; font-weight: 700; color: var(--text); margin: 4px 0 2px; letter-spacing: -0.01em; }
+  .result-block .result-unit { font-size: 13px; color: var(--text-muted); }
+  .result-block .result-note { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--accent); font-size: 13px; color: var(--text); line-height: 1.5; }
+
+  .disclaimer {
+    margin-top: 28px; padding: 14px 16px; background: var(--panel);
+    border: 1px solid var(--border); border-left: 3px solid var(--warn);
+    border-radius: 0 4px 4px 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.6;
+  }
+  .disclaimer strong { color: var(--text); }
+
+  .related { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .related h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0 0 12px; }
+  .related-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .related-item { border: 1px dashed var(--border-strong); border-radius: 4px; padding: 10px 12px; font-size: 12.5px; color: var(--text-faint); }
+  .related-item .related-name { color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 2px; }
+  .related-item.current { border-style: solid; border-color: var(--accent); color: var(--text-muted); }
+  .related-item.current .related-name { color: var(--accent-strong); }
+  a.related-item { display: block; text-decoration: none; transition: border-color 0.15s ease; }
+  a.related-item:hover { border-style: solid; border-color: var(--accent); }
+
+  footer.site-foot { margin-top: 30px; font-size: 12px; color: var(--text-faint); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-row">
+      <a class="brand-mark" href="index.html">WATTREADY</a>
+      <span class="crumb">Generator tools</span>
+    </div>
+    <h1>What size transfer switch do you need?</h1>
+    <p>A transfer switch is what safely connects a generator to your home's wiring. The right size depends on whether you're using a portable or a standby generator — pick the one that matches your setup.</p>
+  </header>
+
+  <div class="layout">
+    <div class="left-col">
+
+      <div class="panel">
+        <h2>Your setup</h2>
+        <div class="mode-tabs">
+          <label>
+            <span><input type="radio" name="mode" value="portable" checked> <span class="mode-title">Portable generator</span></span>
+            <span class="mode-sub">Manual transfer switch, sized to the generator</span>
+          </label>
+          <label>
+            <span><input type="radio" name="mode" value="standby"> <span class="mode-title">Standby generator</span></span>
+            <span class="mode-sub">Automatic transfer switch, sized to your home's panel</span>
+          </label>
+        </div>
+
+        <div id="portable-fields">
+          <div class="field">
+            <label for="gen-watts">Generator's rated running watts</label>
+            <input type="number" id="gen-watts" min="500" max="30000" step="100" value="5000">
+            <div class="error-msg" id="err-watts">Enter a wattage greater than 0.</div>
+          </div>
+
+          <div class="field" style="margin-bottom: 0;">
+            <label>What kind of outlet does the generator use to connect out?</label>
+            <div class="toggle-choices" id="outlet-choices">
+              <label><input type="radio" name="outlet" value="split" checked><span>120/240V twist-lock (most mid-to-large portables)</span></label>
+              <label><input type="radio" name="outlet" value="single"><span>120V only (small portables)</span></label>
+            </div>
+            <div class="hint">Check the outlet on the generator itself, next to the fuel gauge or control panel — it's usually labeled with a plug type like L14-30 (120/240V) or L5-30 (120V only).</div>
+          </div>
+        </div>
+
+        <div id="standby-fields" style="display:none;">
+          <div class="field" style="margin-bottom: 0;">
+            <label for="panel-size">Your home's main electrical panel size</label>
+            <select id="panel-size">
+              <option value="60">60 A (older home)</option>
+              <option value="100" selected>100 A</option>
+              <option value="150">150 A</option>
+              <option value="200">200 A (most common in newer homes)</option>
+              <option value="400">400 A (large home)</option>
+            </select>
+            <div class="hint">This is printed on your main breaker panel, usually on the main breaker switch itself. If you're not sure, an electrician can confirm it in a minute.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="portable-ref-panel">
+        <h2>Standard manual transfer switch sizes</h2>
+        <table class="ref-table" id="portable-ref-table">
+          <thead><tr><th>Switch size</th><th>Typical generator range</th><th>Circuits covered</th></tr></thead>
+          <tbody>
+            <tr data-tier="20"><td>20 A</td><td>Up to ~2,400 W (120V only)</td><td>A few essential circuits</td></tr>
+            <tr data-tier="30"><td>30 A</td><td>Up to ~7,200 W (120/240V)</td><td>6&ndash;10 circuits &mdash; the most common size</td></tr>
+            <tr data-tier="50"><td>50 A</td><td>~7,200&ndash;12,000 W (120/240V)</td><td>10&ndash;16 circuits</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel" id="standby-ref-panel" style="display:none;">
+        <h2>Standard automatic transfer switch sizes</h2>
+        <table class="ref-table" id="standby-ref-table">
+          <thead><tr><th>Switch size</th><th>Matches this panel size</th></tr></thead>
+          <tbody>
+            <tr data-tier="60"><td>60 A</td><td>60 A panel</td></tr>
+            <tr data-tier="100"><td>100 A</td><td>100 A panel</td></tr>
+            <tr data-tier="150"><td>150 A</td><td>150 A panel</td></tr>
+            <tr data-tier="200"><td>200 A</td><td>200 A panel</td></tr>
+            <tr data-tier="400"><td>400 A</td><td>400 A panel</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="disclaimer" id="disclaimer-portable">
+        <strong>The switch size follows the generator's outlet, not the appliances you plan to run.</strong> A manual transfer switch is rated for the maximum current that can safely pass through it — matching it to your generator's outlet rating (not exceeding it) keeps you from overloading the switch, even if your calculated appliance load is lower. If you haven't sized your generator yet, use the generator sizing calculator first.
+      </div>
+      <div class="disclaimer" id="disclaimer-standby" style="display:none;">
+        <strong>The switch is sized to your panel, not to the generator.</strong> An automatic transfer switch needs to safely handle everything your panel could ever draw, since it sits between the utility, the generator, and your whole panel — so it's matched to your panel's rating, not your generator's output. Your generator itself is a separate sizing decision (use the generator sizing calculator), and a smaller generator paired with a correctly-sized switch is normal; the switch just won't draw more than the generator can supply.
+      </div>
+
+      <div class="disclaimer">
+        <strong>This is a starting point, not a permit.</strong> Transfer switch installation involves your home's main electrical panel and is regulated by local electrical code — it should be installed by a licensed electrician, and in most areas requires a permit and inspection. Use this to understand what size to ask for, not as a substitute for that electrician's assessment.
+      </div>
+
+      <div class="related">
+        <h3>Related tools</h3>
+        <div class="related-list">
+          <a class="related-item" href="generator-sizing-calculator.html"><span class="related-name">Generator sizing calculator</span>What size generator do you need</a>
+          <a class="related-item" href="generator-runtime-fuel-calculator.html"><span class="related-name">Runtime &amp; fuel cost</span>How long a tank will last and what it'll cost</a>
+          <a class="related-item" href="extension-cord-wire-gauge-calculator.html"><span class="related-name">Extension cord wire gauge</span>Safe gauge for your generator's load and cord length</a>
+          <a class="related-item" href="portable-vs-standby-generator.html"><span class="related-name">Portable vs. standby</span>Compare the two paths for your situation</a>
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="summary">
+      <h2>Recommended switch</h2>
+
+      <div class="result-block">
+        <div class="result-label">MINIMUM SWITCH SIZE</div>
+        <div class="num-display" id="result-amps">30</div>
+        <div class="result-unit">amps</div>
+        <div class="result-note" id="result-note">A 30A manual transfer switch covers most mid-size portable generators.</div>
+      </div>
+
+      <div class="summary-line" id="row-amps-draw"><span class="lbl">Current draw at 240V</span><span class="val" id="sum-amps">0.0 A</span></div>
+      <div class="summary-divider" id="divider-1"></div>
+      <div class="summary-line"><span class="lbl">Circuits typically covered</span><span class="val" id="sum-circuits">6&ndash;10</span></div>
+    </aside>
+  </div>
+
+  <footer class="site-foot">Estimates only. Have a licensed electrician confirm before purchase and installation.</footer>
+</div>
+
+<script>
+(function() {
+  var portableFields = document.getElementById('portable-fields');
+  var standbyFields = document.getElementById('standby-fields');
+  var portableRefPanel = document.getElementById('portable-ref-panel');
+  var standbyRefPanel = document.getElementById('standby-ref-panel');
+  var disclaimerPortable = document.getElementById('disclaimer-portable');
+  var disclaimerStandby = document.getElementById('disclaimer-standby');
+  var rowAmpsDraw = document.getElementById('row-amps-draw');
+  var divider1 = document.getElementById('divider-1');
+
+  var wattsInput = document.getElementById('gen-watts');
+  var panelSelect = document.getElementById('panel-size');
+
+  function mode() { return document.querySelector('input[name="mode"]:checked').value; }
+  function outletType() { return document.querySelector('input[name="outlet"]:checked').value; }
+
+  function clearHighlights(tableId) {
+    document.querySelectorAll('#' + tableId + ' tr').forEach(function(tr) { tr.classList.remove('highlight-row'); });
+  }
+  function highlightTier(tableId, tier) {
+    clearHighlights(tableId);
+    var row = document.querySelector('#' + tableId + ' tr[data-tier="' + tier + '"]');
+    if (row) row.classList.add('highlight-row');
+  }
+
+  function computePortable() {
+    var watts = parseFloat(wattsInput.value);
+    var errEl = document.getElementById('err-watts');
+    if (isNaN(watts) || watts <= 0) {
+      errEl.classList.add('show');
+      return;
+    }
+    errEl.classList.remove('show');
+
+    var type = outletType();
+    var amps, tier, circuits, note;
+
+    if (type === 'single') {
+      amps = watts / 120;
+      if (amps <= 20) { tier = 20; circuits = 'A few essential circuits'; }
+      else { tier = 30; circuits = '6\u201310 circuits'; }
+      note = 'This generator connects via a 120V-only outlet, so the switch is sized to that outlet\'s amperage directly, not split across 240V.';
+    } else {
+      amps = watts / 240;
+      if (amps <= 20) { tier = 20; circuits = 'A few essential circuits'; }
+      else if (amps <= 30) { tier = 30; circuits = '6\u201310 circuits'; }
+      else { tier = 50; circuits = '10\u201316 circuits'; }
+      note = 'At ' + Math.round(amps) + ' amps on a 120/240V outlet, a ' + tier + 'A manual transfer switch is the standard match.';
+    }
+
+    document.getElementById('result-amps').textContent = tier;
+    document.getElementById('result-note').textContent = note;
+    document.getElementById('sum-amps').textContent = amps.toFixed(1) + ' A';
+    document.getElementById('sum-circuits').textContent = circuits;
+    highlightTier('portable-ref-table', tier);
+  }
+
+  function computeStandby() {
+    var panel = panelSelect.value;
+    document.getElementById('result-amps').textContent = panel;
+    document.getElementById('result-note').textContent = 'A ' + panel + 'A automatic transfer switch matches a ' + panel + 'A home panel, so it can safely pass through everything the panel could ever draw.';
+    document.getElementById('sum-circuits').textContent = 'Whole panel';
+    highlightTier('standby-ref-table', panel);
+  }
+
+  function render() {
+    var m = mode();
+    if (m === 'portable') {
+      portableFields.style.display = '';
+      standbyFields.style.display = 'none';
+      portableRefPanel.style.display = '';
+      standbyRefPanel.style.display = 'none';
+      disclaimerPortable.style.display = '';
+      disclaimerStandby.style.display = 'none';
+      rowAmpsDraw.style.display = '';
+      divider1.style.display = '';
+      computePortable();
+    } else {
+      portableFields.style.display = 'none';
+      standbyFields.style.display = '';
+      portableRefPanel.style.display = 'none';
+      standbyRefPanel.style.display = '';
+      disclaimerPortable.style.display = 'none';
+      disclaimerStandby.style.display = '';
+      rowAmpsDraw.style.display = 'none';
+      divider1.style.display = 'none';
+      computeStandby();
+    }
+  }
+
+  document.querySelectorAll('input[name="mode"]').forEach(function(el) { el.addEventListener('change', render); });
+  document.querySelectorAll('input[name="outlet"]').forEach(function(el) { el.addEventListener('change', render); });
+  wattsInput.addEventListener('input', render);
+  panelSelect.addEventListener('change', render);
+
+  render();
+})();
+</script>
+</body>
+</html>
